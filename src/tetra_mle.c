@@ -36,7 +36,8 @@ int rx_tl_sdu(struct tetra_mac_state *tms, struct msgb *msg, unsigned int len)
                         struct tetra_tdma_time tm = t_phy_state.time;
                         uint8_t auth_sub_type;
                         uint8_t rand1[10];
-                        uint8_t rs[10];
+                        uint8_t ra[10];
+
                         const uint8_t *cur = bits + 3 + 4; /* skip PDISC and PDU type */
 
                         auth_sub_type = bits_to_uint(cur, 2);
@@ -47,12 +48,13 @@ int rx_tl_sdu(struct tetra_mac_state *tms, struct msgb *msg, unsigned int len)
                                 cur += 8;
                         }
                         for (int i = 0; i < 10; i++) {
-                                rs[i] = bits_to_uint(cur, 8);
+                                ra[i] = bits_to_uint(cur, 8);
                                 cur += 8;
                         }
 
-                        printf(" RAND1=%s RS=%s\n", osmo_hexdump(rand1, sizeof(rand1)),
-                               osmo_hexdump(rs, sizeof(rs)));
+                        printf(" RAND1=%s RA=%s\n", osmo_hexdump(rand1, sizeof(rand1)),
+                               osmo_hexdump(ra, sizeof(ra)));
+
 
                         /* Provide a timestamp close to the burst that carried
                          * the last fragment and ensure the timeslot is in the
