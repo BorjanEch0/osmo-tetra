@@ -65,7 +65,7 @@ case "$PYT" in
 		socat -b 4096 UDP-RECV:${UDP_PORT} STDOUT | demod/simdemod3.py | ./tetra-rx   /dev/stdin
 		;;
 	*)
-		echo "Dont know how to handle pythin version [$PYT]"
+                echo "Dont know how to handle python version [$PYT]"
 		exit 1
 esac
 
