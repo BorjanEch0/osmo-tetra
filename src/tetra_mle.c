@@ -26,25 +26,25 @@ int rx_tl_sdu(struct tetra_mac_state *tms, struct msgb *msg, unsigned int len)
 
 	printf("TL-SDU(%s): %s ", tetra_get_mle_pdisc_name(mle_pdisc),
 		osmo_ubit_dump(bits, len));
-       switch (mle_pdisc) {
-       case TMLE_PDISC_MM:
-       {
-               uint8_t mm_pdut = bits_to_uint(bits+3, 4);
-               printf("%s\n", tetra_get_mm_pdut_name(mm_pdut, 0));
+        switch (mle_pdisc) {
+        case TMLE_PDISC_MM: {
+                uint8_t pdut = bits_to_uint(bits+3, 4);
+                printf("%s\n", tetra_get_mm_pdut_name(pdut, 0));
+               if (pdut == TMM_PDU_T_D_AUTH) {
+                        struct msgb *gsmtap_msg;
+                        struct tetra_tdma_time tm = t_phy_state.time;
 
-               if (mm_pdut == TMM_PDU_T_D_AUTH) {
-                       enum tetra_log_chan lchan;
-                       struct msgb *gsmtap_msg;
-
-                       lchan = tms->cur_burst.is_traffic ? TETRA_LC_TCH : TETRA_LC_STCH;
-                       gsmtap_msg = tetra_gsmtap_makemsg(&t_phy_state.time, lchan,
-                                                       tms->tsn - 1, 0, 0, 0,
-                                                       bits, len, tms);
-                       if (gsmtap_msg)
-                               tetra_gsmtap_sendmsg(gsmtap_msg);
-               }
-               break;
-       }
+                        /* Provide a timestamp close to the burst that carried
+                         * the last fragment and ensure the timeslot is in the
+                         * expected 0..3 range for GSMTAP. */
+                        gsmtap_msg = tetra_gsmtap_makemsg(&tm, TETRA_LC_STCH,
+                                                         tms->tsn - 1, 0,
+                                                         0, 0, bits, len, tms);
+                        if (gsmtap_msg)
+                                tetra_gsmtap_sendmsg(gsmtap_msg);
+                }
+                break;
+        }
 	case TMLE_PDISC_CMCE:
 		printf("%s\n", tetra_get_cmce_pdut_name(bits_to_uint(bits+3, 5), 0));
 		break;
