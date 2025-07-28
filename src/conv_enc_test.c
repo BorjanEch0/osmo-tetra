@@ -87,9 +87,9 @@ static void decode_schf(const uint8_t *bits)
 /* Build a full 'downlink continuous SYNC burst' from SYSINFO-PDU and SYNC-PDU */
 int build_ndb_schf()
 {
-	/* input: 268 type-1 bits */
-	uint8_t type2[284];
-	uint8_t master[284*4];
+        /* input: 268 type-1 bits */
+        uint8_t type2[288];
+        uint8_t master[288*4];
 	uint8_t type3[432];
 	uint8_t type4[432];
 	uint8_t type5[432];
@@ -203,8 +203,8 @@ int build_sb()
 	uint8_t sb_type4[120];
 	uint8_t sb_type5[120];
 
-	uint8_t si_type2[140];
-	uint8_t si_master[140*4];
+        uint8_t si_type2[144];
+        uint8_t si_master[144*4];
 	uint8_t si_type3[216];
 	uint8_t si_type4[216];
 	uint8_t si_type5[216];
@@ -264,13 +264,13 @@ int build_sb()
 	/* Append 4 tail bits: type-2 bits */
 	cur += 4;
 
-	printf("SI type2: %s\n", osmo_ubit_dump(si_type2, 140));
+        printf("SI type2: %s\n", osmo_ubit_dump(si_type2, 144));
 
 	/* Run rate 2/3 RCPC code: type-3 bits */
 	{
 		struct conv_enc_state *ces = calloc(1, sizeof(*ces));
-		conv_enc_init(ces);
-		conv_enc_input(ces, sb_type2, 144, si_master);
+                conv_enc_init(ces);
+                conv_enc_input(ces, si_type2, 144, si_master);
 		get_punctured_rate(TETRA_RCPC_PUNCT_2_3, si_master, 216, si_type3);
 		free(ces);
 	}

@@ -13,6 +13,7 @@
 #include "tetra_cmce_pdu.h"
 #include "tetra_sndcp_pdu.h"
 #include "tetra_mle_pdu.h"
+#include "tetra_common.h"
 #include "tetra_gsmtap.h"
 
 
