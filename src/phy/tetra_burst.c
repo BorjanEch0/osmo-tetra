@@ -159,7 +159,7 @@ void put_phase_adj_bits(const uint8_t *bits, enum phase_adj_bits pa, uint8_t *ou
 	sum_phase = sum_up_phase(bits + 2*(pan->n1-1), 1 + pan->n2 - pan->n1);
 	adj_phase = calc_phase_adj(sum_phase);
 
-	p2b = &phase2bits[adj_phase];
+       p2b = &phase2bits[PHASE(adj_phase)];
 
 	*out++ = p2b->bits[0];
 	*out++ = p2b->bits[1];
