@@ -6,6 +6,7 @@
 #include <osmocom/core/msgb.h>
 #include <osmocom/core/talloc.h>
 #include <osmocom/core/bits.h>
+#include <osmocom/core/utils.h>
 
 #include "tetra_mle_pdu.h"
 #include "tetra_mle.h"
@@ -33,6 +34,25 @@ int rx_tl_sdu(struct tetra_mac_state *tms, struct msgb *msg, unsigned int len)
                if (pdut == TMM_PDU_T_D_AUTH) {
                         struct msgb *gsmtap_msg;
                         struct tetra_tdma_time tm = t_phy_state.time;
+                        uint8_t auth_sub_type;
+                        uint8_t rand1[10];
+                        uint8_t ra[10];
+                        const uint8_t *cur = bits + 3 + 4; /* skip PDISC and PDU type */
+
+                        auth_sub_type = bits_to_uint(cur, 2);
+                        cur += 2;
+
+                        for (int i = 0; i < 10; i++) {
+                                rand1[i] = bits_to_uint(cur, 8);
+                                cur += 8;
+                        }
+                        for (int i = 0; i < 10; i++) {
+                                ra[i] = bits_to_uint(cur, 8);
+                                cur += 8;
+                        }
+
+                        printf(" RAND1=%s RA=%s\n", osmo_hexdump(rand1, sizeof(rand1)),
+                               osmo_hexdump(ra, sizeof(ra)));
 
                         /* Provide a timestamp close to the burst that carried
                          * the last fragment and ensure the timeslot is in the
