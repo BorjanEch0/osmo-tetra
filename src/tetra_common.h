@@ -59,7 +59,7 @@ struct tetra_mac_state {
 
 	char *dumpdir;	/* Where to save traffic channel dump */
 	int ssi;	/* SSI */
-	int tsn;	/* Timeslon number */
+	int tsn;	/* Timeslot number */
 	int usage_marker; /* Usage marker (if addressed)*/
 	int addr_type;
 };
