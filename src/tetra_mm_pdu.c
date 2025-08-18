@@ -41,6 +41,44 @@ static const struct value_string mm_pdut_d_names[] = {
 };
 const char *tetra_get_mm_pdut_name(uint8_t pdut, int uplink)
 {
-	/* FIXME: uplink */
-	return get_value_string(mm_pdut_d_names, pdut);
+        /* FIXME: uplink */
+        return get_value_string(mm_pdut_d_names, pdut);
+}
+
+static const struct value_string auth_sub_names[] = {
+       { TMM_AUTH_ST_DEMAND,   "Demand" },
+       { TMM_AUTH_ST_RESPONSE, "Response" },
+       { TMM_AUTH_ST_RESULT,   "Result" },
+       { TMM_AUTH_ST_REJECT,   "Reject" },
+       { 0, NULL }
+};
+
+const char *tetra_get_auth_sub_type_name(uint8_t sub_type)
+{
+       return get_value_string(auth_sub_names, sub_type);
+}
+
+static const struct value_string otar_sub_names[] = {
+       { TMM_OTAR_ST_CCK_PROVIDE,          "CCK Provide" },
+       { TMM_OTAR_ST_CCK_REJECT,           "CCK Reject" },
+       { TMM_OTAR_ST_SCK_PROVIDE,          "SCK Provide" },
+       { TMM_OTAR_ST_SCK_REJECT,           "SCK Reject" },
+       { TMM_OTAR_ST_GCK_PROVIDE,          "GCK Provide" },
+       { TMM_OTAR_ST_GCK_REJECT,           "GCK Reject" },
+       { TMM_OTAR_ST_KEY_ASSOCIATE_DEMAND, "Key associate Demand" },
+       { TMM_OTAR_ST_OTAR_NEWCELL,         "OTAR NEWCELL" },
+       { TMM_OTAR_ST_GSKO_PROVIDE,         "GSKO Provide" },
+       { TMM_OTAR_ST_GSKO_REJECT,          "GSKO Reject" },
+       { TMM_OTAR_ST_KEY_DELETE_DEMAND,    "Key delete demand" },
+       { TMM_OTAR_ST_KEY_STATUS_DEMAND,    "Key status demand" },
+       { TMM_OTAR_ST_CMG_GTSI_PROVIDE,     "CMG GTSI provide" },
+       { TMM_OTAR_ST_DM_SCK_ACTIVATE,      "DM SCK Activate" },
+       { TMM_OTAR_ST_RESERVED_14,          "Reserved 14" },
+       { TMM_OTAR_ST_RESERVED_15,          "Reserved 15" },
+       { 0, NULL }
+};
+
+const char *tetra_get_otar_sub_type_name(uint8_t sub_type)
+{
+       return get_value_string(otar_sub_names, sub_type);
 }

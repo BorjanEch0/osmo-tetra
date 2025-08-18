@@ -21,6 +21,34 @@ enum tetra_mm_pdu_type_d {
 	TMM_PDU_T_D_MM_PDU_NOTSUPP	= 0xf
 };
 
+/* Authentication PDU subtypes */
+enum tetra_auth_sub_type {
+       TMM_AUTH_ST_DEMAND = 0,
+       TMM_AUTH_ST_RESPONSE = 1,
+       TMM_AUTH_ST_RESULT = 2,
+       TMM_AUTH_ST_REJECT = 3,
+};
+
+/* OTAR PDU subtypes */
+enum tetra_otar_sub_type {
+       TMM_OTAR_ST_CCK_PROVIDE = 0,
+       TMM_OTAR_ST_CCK_REJECT,
+       TMM_OTAR_ST_SCK_PROVIDE,
+       TMM_OTAR_ST_SCK_REJECT,
+       TMM_OTAR_ST_GCK_PROVIDE,
+       TMM_OTAR_ST_GCK_REJECT,
+       TMM_OTAR_ST_KEY_ASSOCIATE_DEMAND,
+       TMM_OTAR_ST_OTAR_NEWCELL,
+       TMM_OTAR_ST_GSKO_PROVIDE,
+       TMM_OTAR_ST_GSKO_REJECT,
+       TMM_OTAR_ST_KEY_DELETE_DEMAND,
+       TMM_OTAR_ST_KEY_STATUS_DEMAND,
+       TMM_OTAR_ST_CMG_GTSI_PROVIDE,
+       TMM_OTAR_ST_DM_SCK_ACTIVATE,
+       TMM_OTAR_ST_RESERVED_14,
+       TMM_OTAR_ST_RESERVED_15,
+};
+
 /* 16.10.35a Location update accept type */
 enum tetra_mm_loc_upd_acc_type {
 	TMM_LUPD_ACC_T_ROAMING		= 0,
@@ -34,5 +62,7 @@ enum tetra_mm_loc_upd_acc_type {
 };
 
 const char *tetra_get_mm_pdut_name(uint8_t pdut, int uplink);
+const char *tetra_get_auth_sub_type_name(uint8_t sub_type);
+const char *tetra_get_otar_sub_type_name(uint8_t sub_type);
 
 #endif
