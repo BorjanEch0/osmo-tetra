@@ -114,10 +114,12 @@ int tetra_burst_sync_in(struct tetra_rx_state *trs, uint8_t *bits, unsigned int 
 			printf("\nBURST");
 			DEBUGP(": %s", osmo_ubit_dump(trs->bitbuf, TETRA_BITS_PER_TS));
 			printf("\n");
-			rc = tetra_find_train_seq(trs->bitbuf, trs->bits_in_buf,
-						  (1 << TETRA_TRAIN_NORM_1)|
-						  (1 << TETRA_TRAIN_NORM_2)|
-						  (1 << TETRA_TRAIN_SYNC), &train_seq_offs);
+                         rc = tetra_find_train_seq(trs->bitbuf, trs->bits_in_buf,
+                                                   (1 << TETRA_TRAIN_NORM_1)|
+                                                   (1 << TETRA_TRAIN_NORM_2)|
+                                                   (1 << TETRA_TRAIN_NORM_3)|
+                                                   (1 << TETRA_TRAIN_EXT)|
+                                                   (1 << TETRA_TRAIN_SYNC), &train_seq_offs);
 			switch (rc) {
 			case TETRA_TRAIN_SYNC:
 				if (train_seq_offs == 214)
@@ -127,14 +129,15 @@ int tetra_burst_sync_in(struct tetra_rx_state *trs, uint8_t *bits, unsigned int 
 					trs->state = RX_S_UNLOCKED;
 				}
 				break;
-			case TETRA_TRAIN_NORM_1:
-			case TETRA_TRAIN_NORM_2:
-			case TETRA_TRAIN_NORM_3:
-				if (train_seq_offs == 244)
-					tetra_burst_rx_cb(trs->bitbuf, TETRA_BITS_PER_TS, rc, trs->burst_cb_priv);
-				else
-					fprintf(stderr, "#### SYNC burst at offset %u?!?\n", train_seq_offs);
-				break;
+                         case TETRA_TRAIN_NORM_1:
+                         case TETRA_TRAIN_NORM_2:
+                         case TETRA_TRAIN_NORM_3:
+                         case TETRA_TRAIN_EXT:
+                                 if (train_seq_offs == 244)
+                                         tetra_burst_rx_cb(trs->bitbuf, TETRA_BITS_PER_TS, rc, trs->burst_cb_priv);
+                                 else
+                                         fprintf(stderr, "#### SYNC burst at offset %u?!?\n", train_seq_offs);
+                                 break;
 			default:
 				fprintf(stderr, "#### could not find successive burst training sequence\n");
 				trs->state = RX_S_UNLOCKED;
