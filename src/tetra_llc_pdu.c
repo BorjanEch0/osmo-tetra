@@ -92,14 +92,14 @@ static const uint8_t tetra_llc_pdu_lengths[16] = {
 	5 + 32,	/* TLLC_PDUT_BL_DATA_FCS */
 	4 + 32,	/* TLLC_PDUT_BL_UDATA_FCS */
 	5 + 32,	/* TLLC_PDUT_BL_ACK_FCS */
-	0,	/* Not implemented, TLLC_PDUT_AL_SETUP */
+	16,	/* TLLC_PDUT_AL_SETUP */
 	13,	/* TLLC_PDUT_AL_DATA_FINAL */
 	17,	/* TLLC_PDUT_AL_UDATA_UFINAL */
-	1,	/* Not implemented, TLLC_PDUT_AL_ACK_RNR */
-	0,	/* Not implemented, TLLC_PDUT_AL_RECONNECT */
-	0,	/* Not implemented, TLLC_PDUT_SUPPL */
-	0,	/* Not implemented, TLLC_PDUT_L2SIG */
-	0,	/* Not implemented, TLLD_PDUT_AL_DISC */
+	9,	/* TLLC_PDUT_AL_ACK_RNR */
+	16,	/* TLLC_PDUT_AL_RECONNECT */
+	0,	/* TLLC_PDUT_SUPPL (variable) */
+	0,	/* TLLC_PDUT_L2SIG (variable) */
+	8,	/* TLLD_PDUT_AL_DISC */
 };
 
 static uint32_t tetra_llc_compute_fcs(const uint8_t *buf, int len)
@@ -205,12 +205,13 @@ int tetra_llc_pdu_parse(struct tetra_llc_pdu *lpp, uint8_t *buf, int len)
 		}
 		break;
 
-	case TLLC_PDUT_AL_SETUP:
-		/* TODO FIXME IMPLEMENT */
-		lpp->pdu_type = TLLC_PDUT_DEC_AL_SETUP;
-		lpp->tl_sdu = cur;
-		lpp->tl_sdu_len = 0;
-		break;
+        case TLLC_PDUT_AL_SETUP:
+                lpp->nr = bits_to_uint(cur, 8); cur += 8;
+                lpp->ns = bits_to_uint(cur, 8); cur += 8;
+                lpp->tl_sdu = cur;
+                lpp->tl_sdu_len = len - (cur - buf);
+                lpp->pdu_type = TLLC_PDUT_DEC_AL_SETUP;
+                break;
 
 	case TLLC_PDUT_AL_DATA_FINAL:
 		if (*cur++) {
@@ -259,43 +260,97 @@ int tetra_llc_pdu_parse(struct tetra_llc_pdu *lpp, uint8_t *buf, int len)
 		}
 		break;
 
-	case TLLC_PDUT_AL_ACK_RNR:
-		/* TODO FIXME IMPLEMENT */
-		if (*cur++) {
-			/* AL-ACK 21.2.3.1 */
-			lpp->pdu_type = TLLC_PDUT_DEC_AL_ACK;
-		} else {
-			/* AL-RNR 21.2.3.1 */
-			lpp->pdu_type = TLLC_PDUT_DEC_AL_RNR;
-		}
+        case TLLC_PDUT_AL_ACK_RNR:
+                if (*cur++)
+                        lpp->pdu_type = TLLC_PDUT_DEC_AL_ACK;
+                else
+                        lpp->pdu_type = TLLC_PDUT_DEC_AL_RNR;
+                lpp->nr = bits_to_uint(cur, 8); cur += 8;
+                lpp->tl_sdu = cur;
+                lpp->tl_sdu_len = 0;
+                break;
 
-		lpp->tl_sdu = cur;
-		lpp->tl_sdu_len = 0;
-		break;
+        case TLLC_PDUT_AL_RECONNECT:
+                lpp->nr = bits_to_uint(cur, 8); cur += 8;
+                lpp->ns = bits_to_uint(cur, 8); cur += 8;
+                lpp->tl_sdu = cur;
+                lpp->tl_sdu_len = len - (cur - buf);
+                lpp->pdu_type = TLLC_PDUT_DEC_AL_RECONNECT;
+                break;
 
-	case TLLC_PDUT_AL_RECONNECT:
-		/* TODO FIXME IMPLEMENT */
-		lpp->pdu_type = TLLC_PDUT_DEC_AL_RECONNECT;
-		lpp->tl_sdu = cur;
-		lpp->tl_sdu_len = 0;
-		break;
+        case TLLD_PDUT_AL_DISC:
+                lpp->nr = bits_to_uint(cur, 8); cur += 8;
+                lpp->pdu_type = TLLC_PDUT_DEC_AL_DISC;
+                lpp->tl_sdu = cur;
+                lpp->tl_sdu_len = 0;
+                break;
 
-	case TLLD_PDUT_AL_DISC:
-		/* TODO FIXME IMPLEMENT */
-		lpp->pdu_type = TLLC_PDUT_DEC_AL_DISC;
-		lpp->tl_sdu = cur;
-		lpp->tl_sdu_len = 0;
-		break;
-
-	case TLLC_PDUT_SUPPL:
-	case TLLC_PDUT_L2SIG:
-		/* TODO FIXME IMPLEMENT */
-	default:
-		/* Prevent further parsing */
-		lpp->pdu_type = TLLC_PDUT_DEC_UNKNOWN;
-		lpp->tl_sdu = cur;
-		lpp->tl_sdu_len = 0;
-	}
+        case TLLC_PDUT_SUPPL:
+                switch (bits_to_uint(cur, 2)) {
+                case TLLC_PDUT_SUPPL_ALX_DATA_FINAL:
+                        cur += 2;
+                        if (*cur++) {
+                                cur++; /* AL_FINAL_AR */
+                                lpp->ns = bits_to_uint(cur, 8); cur += 8;
+                                lpp->ss = bits_to_uint(cur, 8); cur += 8;
+                                lpp->tl_sdu = cur;
+                                lpp->tl_sdu_len = len - (cur - buf);
+                                lpp->pdu_type = TLLC_PDUT_DEC_ALX_FINAL;
+                                lpp->have_fcs = 1;
+                        } else {
+                                cur++;
+                                lpp->ns = bits_to_uint(cur, 8); cur += 8;
+                                lpp->ss = bits_to_uint(cur, 8); cur += 8;
+                                lpp->tl_sdu = cur;
+                                lpp->tl_sdu_len = len - (cur - buf);
+                                lpp->pdu_type = TLLC_PDUT_DEC_ALX_DATA;
+                        }
+                        break;
+                case TLLC_PDUT_SUPPL_ALX_UDATA_UFINAL:
+                        cur += 2;
+                        if (*cur++) {
+                                lpp->ns = bits_to_uint(cur, 8); cur += 8;
+                                lpp->ss = bits_to_uint(cur, 8); cur += 8;
+                                lpp->tl_sdu = cur;
+                                lpp->tl_sdu_len = len - (cur - buf);
+                                lpp->pdu_type = TLLC_PDUT_DEC_ALX_UFINAL;
+                                lpp->have_fcs = 1;
+                        } else {
+                                lpp->ns = bits_to_uint(cur, 8); cur += 8;
+                                lpp->ss = bits_to_uint(cur, 8); cur += 8;
+                                lpp->tl_sdu = cur;
+                                lpp->tl_sdu_len = len - (cur - buf);
+                                lpp->pdu_type = TLLC_PDUT_DEC_ALX_UDATA;
+                        }
+                        break;
+                case TLLC_PDUT_SUPPL_ALX_ACK_RNR:
+                        cur += 2;
+                        if (*cur++)
+                                lpp->pdu_type = TLLC_PDUT_DEC_ALX_ACK;
+                        else
+                                lpp->pdu_type = TLLC_PDUT_DEC_ALX_RNR;
+                        lpp->nr = bits_to_uint(cur, 8); cur += 8;
+                        lpp->tl_sdu = cur;
+                        lpp->tl_sdu_len = 0;
+                        break;
+                default:
+                        lpp->pdu_type = TLLC_PDUT_DEC_UNKNOWN;
+                        lpp->tl_sdu = cur;
+                        lpp->tl_sdu_len = 0;
+                        break;
+                }
+                break;
+        case TLLC_PDUT_L2SIG:
+                cur += 3; /* skip subtype */
+                lpp->pdu_type = TLLC_PDUT_DEC_UNKNOWN;
+                lpp->tl_sdu = cur;
+                lpp->tl_sdu_len = len - (cur - buf);
+                break;
+        default:
+                lpp->pdu_type = TLLC_PDUT_DEC_UNKNOWN;
+                lpp->tl_sdu = cur;
+                lpp->tl_sdu_len = 0;
+        }
 
 	/* Sanity check to prevent (further) out of bounds reads */
 	if (len < cur - buf) {
