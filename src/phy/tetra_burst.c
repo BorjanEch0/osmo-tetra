@@ -45,6 +45,9 @@
 #define NDB_BBK2_BITS	(8*DQPSK4_BITS_PER_SYM)
 #define NDB_BLK_BITS	(108*DQPSK4_BITS_PER_SYM)
 #define NDB_BBK_BITS	SB_BBK_BITS
+/* normal uplink burst: data start offset and length */
+#define NUB_BLK1_OFFSET NDB_BLK1_OFFSET
+#define NUB_BLK_BITS    (84*DQPSK4_BITS_PER_SYM)
 
 
 /* 9.4.4.3.1 Frequency Correction Field */
@@ -360,20 +363,22 @@ void tetra_burst_rx_cb(const uint8_t *burst, unsigned int len, enum tetra_train_
 		tp_sap_udata_ind(TPSAP_T_NDB, BLK_1, burst+NDB_BLK1_OFFSET, NDB_BLK_BITS, priv);
 		tp_sap_udata_ind(TPSAP_T_NDB, BLK_2, burst+NDB_BLK2_OFFSET, NDB_BLK_BITS, priv);
 		break;
-	case TETRA_TRAIN_NORM_1:
-		/* re-combine the broadcast block */
-		memcpy(bbk_buf, burst+NDB_BBK1_OFFSET, NDB_BBK1_BITS);
-		memcpy(bbk_buf+NDB_BBK1_BITS, burst+NDB_BBK2_OFFSET, NDB_BBK2_BITS);
+        case TETRA_TRAIN_NORM_1:
+                /* re-combine the broadcast block */
+                memcpy(bbk_buf, burst+NDB_BBK1_OFFSET, NDB_BBK1_BITS);
+                memcpy(bbk_buf+NDB_BBK1_BITS, burst+NDB_BBK2_OFFSET, NDB_BBK2_BITS);
 		/* re-combine the two parts */
 		memcpy(ndbf_buf, burst+NDB_BLK1_OFFSET, NDB_BLK_BITS);
 		memcpy(ndbf_buf+NDB_BLK_BITS, burst+NDB_BLK2_OFFSET, NDB_BLK_BITS);
 		/* send two parts of the burst via TP-SAP into lower MAC */
-		tp_sap_udata_ind(TPSAP_T_BBK, 0, bbk_buf, NDB_BBK_BITS, priv);
-		tp_sap_udata_ind(TPSAP_T_SCH_F, 0, ndbf_buf, 2*NDB_BLK_BITS, priv);
-		break;
-	case TETRA_TRAIN_NORM_3:
-	case TETRA_TRAIN_EXT:
-		/* uplink training sequences, should not be encountered, ignore */
-		break;
-	}
+                tp_sap_udata_ind(TPSAP_T_BBK, 0, bbk_buf, NDB_BBK_BITS, priv);
+                tp_sap_udata_ind(TPSAP_T_SCH_F, 0, ndbf_buf, 2*NDB_BLK_BITS, priv);
+                break;
+       case TETRA_TRAIN_NORM_3:
+       case TETRA_TRAIN_EXT:
+               /* uplink bursts: pass user data to lower MAC */
+               tp_sap_udata_ind(TPSAP_T_SCH_HU, 0,
+                                burst+NUB_BLK1_OFFSET, NUB_BLK_BITS, priv);
+               break;
+       }
 }
